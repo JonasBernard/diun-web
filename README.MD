@@ -13,6 +13,13 @@ a reverse proxy.
 
 ![Preview](preview_screenshot.png)
 
+## Docker image
+
+The image is built by GitHub Actions for `linux/amd64` and `linux/arm64` on every push to `main`
+(tagged `latest`) and on `v*` tags, and published to `ghcr.io/jonasbernard/diun-web`.
+It is also published to Docker Hub as `jonasbernard/diun-web` when the repository secrets
+`DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` are set.
+
 ## How to install
 
 This assumes that you run DIUN in docker via docker compose. If this is not the case,
