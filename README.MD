@@ -13,6 +13,11 @@ a reverse proxy.
 
 ![Preview](preview_screenshot.png)
 
+## Docker image
+
+The image is built by GitHub Actions for `linux/amd64` and `linux/arm64` on every push to `main`
+(tagged `latest`) and on `v*` tags, and published to `ghcr.io/jonasbernard/diun-web`.
+
 ## How to install
 
 This assumes that you run DIUN in docker via docker compose. If this is not the case,
@@ -45,7 +50,7 @@ services:
       - LOG_JSON=false
     entrypoint: sh -c "apk add python3 && diun serve"
   diun-web:
-    image: jonasbernard/diun-web
+    image: ghcr.io/jonasbernard/diun-web:latest
     restart: unless-stopped
     volumes:
       - "./notification_data:/app/data"
