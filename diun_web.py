@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, request, url_for
 
 app = Flask(__name__)
 
@@ -33,6 +33,15 @@ def delete_notification(index):
     if 0 <= index < len(data):
         data.pop(index)
         save_data(data)
+    return redirect(url_for('index'))
+
+@app.route('/delete', methods=['POST'])
+def delete_notifications():
+    data = load_data()
+    indices = {int(i) for i in request.form.getlist('indices') if i.isdigit()}
+    remaining = [notif for i, notif in enumerate(data) if i not in indices]
+    if len(remaining) != len(data):
+        save_data(remaining)
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

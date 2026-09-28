@@ -17,6 +17,11 @@
         summary { cursor: pointer; font-weight: bold; color: #374151; }
         pre { background: #f3f4f6; padding: 8px; border-radius: 4px; overflow-x: auto; }
         .headerline { display: flex; align-items: center; gap: 2em; justify-content: flex-start; margin-bottom: 3em; }
+        .delete-btn:disabled { background-color: #fca5a5; cursor: not-allowed; }
+        .toolbar { display: flex; align-items: center; gap: 1em; margin-bottom: 1em; }
+        .select-col { width: 1%; }
+        .select-col input { width: 16px; height: 16px; cursor: pointer; }
+        tr.selected td { background-color: #fef2f2; }
     </style>
 </head>
 <body>
@@ -27,9 +32,14 @@
     </div>
 
     {% if notifications %}
+    <form id="bulk-delete-form" action="{{ url_for('delete_notifications') }}" method="POST" class="toolbar"
+          onsubmit="return confirm('Delete ' + selectedCount() + ' selected notification(s)?');">
+        <button type="submit" id="bulk-delete-btn" class="delete-btn" disabled>Delete selected (0)</button>
+    </form>
     <table>
         <thead>
             <tr>
+                <th class="select-col"><input type="checkbox" id="select-all" title="Select all"></th>
                 <th>Status</th>
                 <th>Image</th>
                 <th>Container</th>
@@ -41,6 +51,9 @@
         <tbody>
             {% for notif in notifications %}
             <tr>
+                <td class="select-col">
+                    <input type="checkbox" class="row-select" name="indices" value="{{ loop.index0 }}" form="bulk-delete-form">
+                </td>
                 <td>
                     <span style="padding: 3px 8px; background: #d1fae5; color: #065f46; border-radius: 999px; font-size: 0.85em;">
                         {{ notif.get('DIUN_ENTRY_STATUS', 'N/A') }}
@@ -76,6 +89,46 @@
             {% endfor %}
         </tbody>
     </table>
+
+    <script>
+        const selectAll = document.getElementById('select-all');
+        const rowBoxes = Array.from(document.querySelectorAll('.row-select'));
+        const bulkBtn = document.getElementById('bulk-delete-btn');
+        let lastClicked = null;
+
+        function selectedCount() {
+            return rowBoxes.filter(box => box.checked).length;
+        }
+
+        function refresh() {
+            const count = selectedCount();
+            bulkBtn.disabled = count === 0;
+            bulkBtn.textContent = 'Delete selected (' + count + ')';
+            selectAll.checked = count === rowBoxes.length;
+            selectAll.indeterminate = count > 0 && count < rowBoxes.length;
+            rowBoxes.forEach(box => box.closest('tr').classList.toggle('selected', box.checked));
+        }
+
+        selectAll.addEventListener('change', () => {
+            rowBoxes.forEach(box => { box.checked = selectAll.checked; });
+            refresh();
+        });
+
+        rowBoxes.forEach((box, i) => {
+            box.addEventListener('click', event => {
+                // Shift+click selects/deselects the whole range since the last clicked row
+                if (event.shiftKey && lastClicked !== null) {
+                    const [start, end] = [Math.min(lastClicked, i), Math.max(lastClicked, i)];
+                    for (let j = start; j <= end; j++) rowBoxes[j].checked = box.checked;
+                }
+                lastClicked = i;
+                refresh();
+            });
+        });
+
+        // Browsers may restore checkbox state on back/refresh
+        refresh();
+    </script>
     {% else %}
     <p>No notifications recorded yet.</p>
     {% endif %}
